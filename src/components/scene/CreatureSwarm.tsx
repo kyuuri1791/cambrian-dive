@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useRef, type ComponentType, type RefObject } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
-import { CREATURES, type Creature, type ModelKind } from "@/data/creatures";
+import { CREATURES, displayLength, type Creature, type ModelKind } from "@/data/creatures";
 import { diveStore } from "@/lib/diveStore";
 import { VISIBLE_FADE, registerCreature, selectCreature } from "@/lib/focus";
+import { getSchools } from "@/lib/school/client";
 import { createRandom, floorY, hashString, useDepthFade } from "./utils";
 import type { ModelProps } from "./models/types";
 import { Anomalocaris, Opabinia } from "./models/FlappedSwimmers";
@@ -80,20 +81,13 @@ const tmpSphere = new THREE.Sphere();
 const BOUNDS = { x: 14, zNear: -6, zFar: -30 };
 const CENTER = new THREE.Vector3(0, 0, (BOUNDS.zNear + BOUNDS.zFar) / 2);
 
-/**
- * 画面上の大きさ。実寸のままだと小さい生き物が見えないので、
- * 体長の平方根に比例させて差を縮めている（縮尺機能は今後追加）。
- */
-export function displayLength(c: Creature) {
-  return 0.5 * Math.sqrt(c.lengthCm);
-}
-
 export function CreatureSwarm() {
   const instances = useMemo(
     () =>
       CREATURES.flatMap((c) =>
         Array.from({ length: c.count }, (_, i) => ({
           creature: c,
+          index: i,
           seed: hashString(c.id) + i * 7919,
         })),
       ),
@@ -102,14 +96,23 @@ export function CreatureSwarm() {
 
   return (
     <>
-      {instances.map(({ creature, seed }) => (
-        <CreatureInstance key={seed} creature={creature} seed={seed} />
+      {instances.map(({ creature, index, seed }) => (
+        <CreatureInstance key={seed} creature={creature} index={index} seed={seed} />
       ))}
     </>
   );
 }
 
-function CreatureInstance({ creature, seed }: { creature: Creature; seed: number }) {
+function CreatureInstance({
+  creature,
+  index,
+  seed,
+}: {
+  creature: Creature;
+  /** 同じ種類の中での番号。群れの計算結果を取り出すのに使う */
+  index: number;
+  seed: number;
+}) {
   const outer = useRef<THREE.Group>(null);
   const inner = useRef<THREE.Group>(null);
   const fade = useDepthFade(outer, creature.depth);
@@ -124,6 +127,7 @@ function CreatureInstance({ creature, seed }: { creature: Creature; seed: number
   const reactionTime = useRef<number | null>(null);
   const camera = useThree((s) => s.camera);
   const flyby = useRef<Flyby | null>(null);
+  const schoolSnapped = useRef(false);
 
   useEffect(() => {
     if (!outer.current) return;
@@ -139,6 +143,12 @@ function CreatureInstance({ creature, seed }: { creature: Creature; seed: number
         // 横切っている途中なら、その場から普段の動きに戻る
         cancelFlyby(flyby, seed);
         const s = simRef.current;
+        // 群れで泳ぐ生き物は、群れ全体が驚いて散る
+        if (creature.school && outer.current) {
+          const p = outer.current.position;
+          getSchools()?.disturb(creature.id, p.x, p.y, p.z);
+          return;
+        }
         if (s && creature.reaction !== "burrow" && creature.reaction !== "freeze") {
           // カメラと反対の方向へ逃げる
           s.heading = Math.atan2(
@@ -149,7 +159,7 @@ function CreatureInstance({ creature, seed }: { creature: Creature; seed: number
         }
       },
     });
-  }, [creature.id, creature.behavior, creature.reaction, seed, size, fade, camera]);
+  }, [creature.id, creature.behavior, creature.reaction, creature.school, seed, size, fade, camera]);
 
   /**
    * 横切る演出を進める。横切っている間は true を返し、普段の動きを止める。
@@ -227,6 +237,41 @@ function CreatureInstance({ creature, seed }: { creature: Creature; seed: number
     return true;
   };
 
+  /**
+   * 群れの計算結果に合わせて動かす。計算はワーカーで少し遅れて届くので、
+   * 位置と向きはなめらかに追いかける。結果がまだなければ false を返す
+   */
+  const followSchool = (dt: number) => {
+    const g = outer.current;
+    const s = simRef.current;
+    const boid = getSchools()?.get(creature.id, index);
+    if (!g || !s || !boid) return false;
+    const { data, offset } = boid;
+    const [x, y, z, vx, vy, vz] = data.subarray(offset, offset + 6);
+    if (!schoolSnapped.current) {
+      // 最初は計算結果の位置へそのまま置く
+      s.pos.set(x, y, z);
+      schoolSnapped.current = true;
+    } else {
+      s.pos.x = THREE.MathUtils.damp(s.pos.x, x, 12, dt);
+      s.pos.y = THREE.MathUtils.damp(s.pos.y, y, 12, dt);
+      s.pos.z = THREE.MathUtils.damp(s.pos.z, z, 12, dt);
+    }
+    const horizontal = Math.hypot(vx, vz);
+    if (horizontal > 1e-4) {
+      const desired = Math.atan2(-vz, vx);
+      const diff = Math.atan2(Math.sin(desired - s.heading), Math.cos(desired - s.heading));
+      s.heading += diff * Math.min(1, dt * 8);
+    }
+    g.position.copy(s.pos);
+    g.rotation.set(0, s.heading, 0);
+    if (inner.current) {
+      const pitch = THREE.MathUtils.clamp(Math.atan2(vy, horizontal), -0.5, 0.5);
+      inner.current.rotation.z = THREE.MathUtils.damp(inner.current.rotation.z, pitch, 6, dt);
+    }
+    return true;
+  };
+
   // 外されたときに「横切り中」のまま残らないようにする
   useEffect(() => () => cancelFlyby(flyby, seed), [seed]);
 
@@ -250,6 +295,9 @@ function CreatureInstance({ creature, seed }: { creature: Creature; seed: number
 
     // 窓の前を横切る
     if (creature.flyby && updateFlyby(t, dt)) return;
+
+    // 群れで泳ぐ生き物は、ワーカーが計算した位置と向きに合わせる
+    if (creature.school && followSchool(dt)) return;
 
     // ゆっくりランダムに向きを変える
     s.turn += (s.rand() - 0.5) * dt * 1.5;

@@ -3,17 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { diveStore } from "@/lib/diveStore";
 
-export const FLOOR_BASE = -5;
-
-/** 海底の高さ。地形メッシュと海底を這う生き物で共有する */
-export function floorY(x: number, z: number) {
-  return (
-    FLOOR_BASE +
-    0.45 * Math.sin(x * 0.28) * Math.cos(z * 0.22) +
-    0.18 * Math.sin(x * 0.9 + z * 0.7) +
-    0.06 * Math.sin(x * 2.3 - z * 1.7)
-  );
-}
+export { FLOOR_BASE, floorY } from "@/lib/terrain";
 
 /** シード付き乱数。毎回同じ配置になるようにする */
 export function createRandom(seed: number) {

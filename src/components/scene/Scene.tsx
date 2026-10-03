@@ -8,6 +8,7 @@ import { Ocean } from "./Ocean";
 import { CreatureSwarm } from "./CreatureSwarm";
 import { PokeArm, approachPoint, focusCenter } from "./PokeArm";
 import { PhotoCapture } from "./PhotoCapture";
+import { SchoolDriver } from "./SchoolDriver";
 
 /**
  * 潜行の速さの設定。0→1000m で約5秒、100m で約1.5秒かかる。
@@ -34,6 +35,7 @@ export default function Scene() {
       <DepthController />
       <CameraRig />
       <Ocean />
+      <SchoolDriver />
       <CreatureSwarm />
       <PokeArm />
       <PhotoCapture />

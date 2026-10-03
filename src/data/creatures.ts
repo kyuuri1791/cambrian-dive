@@ -56,7 +56,17 @@ export type Creature = {
   reaction: Reaction;
   /** ときどき窓のすぐ前を横切る（大きな生き物の迫力を見せる） */
   flyby?: boolean;
+  /** 群れで泳ぐ（動きはワーカーで計算する） */
+  school?: boolean;
 };
+
+/**
+ * 画面上の大きさ。実寸のままだと小さい生き物が見えないので、
+ * 体長の平方根に比例させて差を縮めている。
+ */
+export function displayLength(c: Pick<Creature, "lengthCm">) {
+  return 0.5 * Math.sqrt(c.lengthCm);
+}
 
 export const CREATURES: Creature[] = [
   {
@@ -136,13 +146,14 @@ export const CREATURES: Creature[] = [
     behavior: "nearFloor",
     lengthCm: 2,
     depth: [50, 800],
-    count: 10,
+    count: 6,
     speed: 0.6,
     locality: "バージェス頁岩（カナダ）",
     description:
       "頭から後ろ向きに伸びる2対の長いトゲが特徴の節足動物。バージェス頁岩で最も多く見つかる化石のひとつ。",
     trivia:
       "化石のトゲに細かい構造が残っており、生きていたときは虹色に光って見えたのではないかと言われている。",
+    school: true,
     reaction: "flee",
   },
   {
@@ -160,6 +171,7 @@ export const CREATURES: Creature[] = [
       "体をくねらせて泳ぐ細長い生き物。背骨のもとになる脊索をもつ、私たち脊索動物の仲間と考えられている。",
     trivia:
       "「人類の祖先」として紹介されることもあるが、直接の祖先かどうかははっきりしていない。",
+    school: true,
     reaction: "flee",
   },
   {
@@ -176,6 +188,7 @@ export const CREATURES: Creature[] = [
     description:
       "最古級の脊椎動物（魚の仲間）。眼や背びれのような構造をもち、群れで泳いでいたかもしれない。",
     trivia: "アゴはまだなく、口は開いたままだったと考えられている。",
+    school: true,
     reaction: "flee",
   },
   {
@@ -237,12 +250,13 @@ export const CREATURES: Creature[] = [
     behavior: "nearFloor",
     lengthCm: 8,
     depth: [0, 400],
-    count: 5,
+    count: 4,
     speed: 0.45,
     locality: "バージェス頁岩（カナダ）",
     description:
       "エビのような姿をした節足動物。2枚の殻で体の前半を覆い、しなやかな腹部と2枚の尾びれをもつ。",
     trivia: "殻の下に卵を抱えた化石が見つかっていて、子育てをしていた証拠としては最古級のもの。",
+    school: true,
     reaction: "flee",
   },
   {
