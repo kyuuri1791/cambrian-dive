@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 潜水艦の丸窓 -->
+  <defs>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4fb8cc"/>
+      <stop offset="0.6" stop-color="#0d4763"/>
+      <stop offset="0.6" stop-color="#8c7c58"/>
+      <stop offset="1" stop-color="#4a463b"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="30" fill="#9a7640"/>
+  <circle cx="32" cy="32" r="24" fill="url(#sea)"/>
+  <circle cx="32" cy="32" r="24" fill="none" stroke="#e2c48a" stroke-width="1.5"/>
+  <g fill="#f1d9a4">
+    <circle cx="32" cy="5" r="2"/><circle cx="59" cy="32" r="2"/>
+    <circle cx="32" cy="59" r="2"/><circle cx="5" cy="32" r="2"/>
+  </g>
+  <!-- アノマロカリスのシルエット -->
+  <g fill="#c9573a">
+    <ellipse cx="34" cy="30" rx="11" ry="3.2"/>
+    <ellipse cx="34" cy="30" rx="7" ry="5.5" opacity="0.7"/>
+    <path d="M45 30 q5 2 2 7" stroke="#c9573a" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M23 30 l-5 -3 v6 z"/>
+  </g>
+</svg>

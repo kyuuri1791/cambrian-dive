@@ -1,0 +1,75 @@
+"use client";
+
+import { useSyncExternalStore } from "react";
+
+export const MAX_DEPTH = 1000;
+
+/**
+ * 突っつく動作の段階。
+ * approach: 近づく / extend: アームを伸ばす / retract: 戻す / return: 元の位置へ戻る
+ */
+export type PokePhase = "idle" | "approach" | "extend" | "retract" | "return";
+
+export type DiveState = {
+  /** 目標の水深 (m)。UI 操作で変わる */
+  targetDepth: number;
+  /** 現在の水深 (m)。目標に向かってゆっくり変化する */
+  depth: number;
+  /** 選択中の生き物 ID */
+  selectedId: string | null;
+  /** カメラが追いかけている個体（CreatureSwarm のインスタンスキー） */
+  focusKey: number | null;
+  /** カメラのズーム倍率 */
+  zoom: number;
+  pokePhase: PokePhase;
+  /** これまでに突っついた生き物 ID */
+  pokedIds: string[];
+};
+
+const initialState: DiveState = {
+  targetDepth: 10,
+  depth: 10,
+  selectedId: null,
+  focusKey: null,
+  zoom: 1,
+  pokePhase: "idle",
+  pokedIds: [],
+};
+
+let state = initialState;
+const listeners = new Set<() => void>();
+
+/** 3D シーン側で毎フレーム参照する値。再レンダリング不要なので store とは分ける */
+export const motion = {
+  /** 潜行速度 (m/s)。正の値で潜っている */
+  velocity: 0,
+  /** アームが当たったときの揺れの強さ (0〜1)。時間とともに減る */
+  impact: 0,
+};
+
+export const diveStore = {
+  get: () => state,
+  set(partial: Partial<DiveState>) {
+    state = { ...state, ...partial };
+    listeners.forEach((l) => l());
+  },
+  setTargetDepth(depth: number) {
+    diveStore.set({
+      targetDepth: Math.min(MAX_DEPTH, Math.max(0, depth)),
+    });
+  },
+  subscribe(listener: () => void) {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  },
+};
+
+export function useDive<T>(selector: (s: DiveState) => T): T {
+  return useSyncExternalStore(
+    diveStore.subscribe,
+    () => selector(state),
+    () => selector(initialState),
+  );
+}

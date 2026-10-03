@@ -1,26 +1,210 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #0b1116;
+  --foreground: #e6f6f8;
+  /* 窓の半径。src/lib/porthole.ts の PORTHOLE_RADIUS_VMIN と合わせる */
+  --r: 44vmin;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:
+    "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", system-ui, sans-serif;
+}
+
+/* 窓の外側を金属の壁で覆う */
+.porthole {
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 0,
+      transparent var(--r),
+      #0a0e12 calc(var(--r) + 1px),
+      #1a2229 calc(var(--r) + 6vmin),
+      #232c33 70%,
+      #12181d 100%
+    );
+}
+
+.porthole-glass {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--r) * 2);
+  height: calc(var(--r) * 2);
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  /* ガラスの映り込みと周辺の暗がり */
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 0.1), transparent 30%),
+    radial-gradient(circle, transparent 62%, rgb(0 0 0 / 0.45) 100%);
+}
+
+.porthole-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--r) * 2 + 5vmin);
+  height: calc(var(--r) * 2 + 5vmin);
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  border: 2.5vmin solid #8a6a3a;
+  box-shadow:
+    inset 0 0 0 0.4vmin #c9a46a,
+    inset 0 0 2vmin rgb(0 0 0 / 0.8),
+    0 0 0 0.4vmin #4a3a20,
+    0 0 4vmin rgb(0 0 0 / 0.9);
+  background: none;
+}
+
+.porthole-rivet {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.6vmin;
+  height: 1.6vmin;
+  margin: -0.8vmin 0 0 -0.8vmin;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 35%, #f1d9a4, #8a6a3a 60%, #3d2e17);
+}
+
+.hud-panel {
+  border: 1px solid rgb(201 164 106 / 0.45);
+  border-radius: 0.5rem;
+  background: rgb(10 20 26 / 0.82);
+  backdrop-filter: blur(4px);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.5),
+    0 4px 20px rgb(0 0 0 / 0.5);
+}
+
+.hud-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: rgb(253 230 138 / 0.65);
+}
+
+.hud-button {
+  border: 1px solid rgb(201 164 106 / 0.5);
+  border-radius: 0.375rem;
+  background: rgb(201 164 106 / 0.12);
+  padding: 0.375rem 0.5rem;
+  font-size: 0.8rem;
+  color: #fde68a;
+  transition: background 0.15s;
+}
+
+.hud-button:hover {
+  background: rgb(201 164 106 / 0.28);
+}
+
+/* 突っつけるとき、ボタンの金色の枠を明滅させて目に留まりやすくする */
+.poke-glow {
+  animation: poke-glow 1.8s ease-in-out infinite;
+}
+
+@keyframes poke-glow {
+  0%,
+  100% {
+    border-color: rgb(252 211 77 / 0.25);
+    box-shadow: none;
+  }
+  50% {
+    border-color: rgb(254 243 199 / 1);
+    box-shadow:
+      0 0 24px 4px rgb(252 211 77 / 0.75),
+      inset 0 0 10px rgb(252 211 77 / 0.35);
+  }
+}
+
+/* ホバー中は明滅を止めて、明るい枠のまま光らせる */
+.poke-glow:hover {
+  animation: none;
+  border-color: rgb(254 243 199 / 1);
+  box-shadow:
+    0 0 18px 2px rgb(252 211 77 / 0.6),
+    inset 0 0 8px rgb(252 211 77 / 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poke-glow {
+    animation: none;
+  }
+}
+
+/* タイムスリップ演出の波紋。窓の中心から静かに広がる */
+.timeslip-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 20%;
+  height: 20%;
+  margin: -10% 0 0 -10%;
+  border-radius: 9999px;
+  border: 1px solid rgb(167 243 208 / 0.35);
+  animation: timeslip-ripple 1.35s ease-out infinite;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes timeslip-ripple {
+  from {
+    transform: scale(0.3);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(5);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timeslip-ring {
+    animation: none;
+  }
+}
+
+/* 撮影ボタン。丸窓の縁に付いた真鍮のスイッチ */
+.photo-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: max(48px, 8vmin);
+  height: max(48px, 8vmin);
+  border-radius: 9999px;
+  border: 2px solid #4a3a20;
+  background: radial-gradient(circle at 35% 30%, #f1d9a4, #a8834a 55%, #4a3a20);
+  box-shadow:
+    0 2px 8px rgb(0 0 0 / 0.6),
+    inset 0 -3px 6px rgb(0 0 0 / 0.35);
+  font-size: max(20px, 3.2vmin);
+  transition: scale 0.1s, filter 0.15s;
+}
+
+.photo-button:hover {
+  filter: brightness(1.1);
+}
+
+.photo-button:active {
+  scale: 0.92;
+}
+
+.photo-button:disabled {
+  filter: grayscale(0.4) brightness(0.8);
+}
+
+/* シャッターの光 */
+.shutter-flash {
+  animation: shutter-flash 0.45s ease-out forwards;
+}
+
+@keyframes shutter-flash {
+  from {
+    opacity: 0.85;
+  }
+  to {
+    opacity: 0;
+  }
 }
