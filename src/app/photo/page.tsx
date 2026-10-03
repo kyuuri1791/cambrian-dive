@@ -25,15 +25,18 @@ async function load(searchParams: Props["searchParams"]) {
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const { main, zone, query, title } = await load(searchParams);
+  // 画像の URL は絶対 URL にする必要がある。リクエストのヘッダーは偽装できるので、
+  // 環境変数 SITE_URL（例: https://cambrian-dive.lolipop-now.app）があればそれを使う
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
   const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  const siteUrl = process.env.SITE_URL ?? `${proto}://${host}`;
   const description = main
     ? `5億800万年前の${zone.name}で${main.name}を撮影しました。タイムマシン潜水艦でカンブリア紀の海へ。`
     : `5億800万年前の${zone.name}の海を撮影しました。タイムマシン潜水艦でカンブリア紀の海へ。`;
   const image = { url: `/api/card?${query}`, width: 1200, height: 630, alt: title };
   return {
-    metadataBase: new URL(`${proto}://${host}`),
+    metadataBase: new URL(siteUrl),
     title: `${title} - CAMBRIAN DIVE`,
     description,
     openGraph: { title, description, images: [image], type: "article" },

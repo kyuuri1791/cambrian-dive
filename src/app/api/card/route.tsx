@@ -4,6 +4,23 @@ import { ImageResponse } from "next/og";
 import { CREATURES } from "@/data/creatures";
 import { decodeShareCard } from "@/lib/shareCard";
 import { OG_HEIGHT, OG_WIDTH, ShareCardImage } from "@/lib/shareCardImage";
+import { clientIp, createRateLimiter } from "@/lib/rateLimit";
+
+/**
+ * 画像の生成は 1 枚 0.3 秒ほど CPU を使う。URL の値を変えながら大量に呼ばれると
+ * CPU 時間の枠を使い切られるので、呼び出し回数と同時に作る枚数に上限を付ける。
+ * 普通は、シェアされたときに X が 1 回取りに来る程度。
+ */
+const allow = createRateLimiter({ perClient: 20, total: 300, windowMs: 60_000 });
+const MAX_CONCURRENT = 3;
+let rendering = 0;
+
+function busy() {
+  return new Response("Too many requests", {
+    status: 429,
+    headers: { "Retry-After": "60", "Cache-Control": "no-store" },
+  });
+}
 
 /**
  * X のリンクカードに表示する観察記録カードの画像。
@@ -39,6 +56,16 @@ function loadSprite(id: string) {
 }
 
 export async function GET(request: Request) {
+  if (rendering >= MAX_CONCURRENT || !allow(clientIp(request))) return busy();
+  rendering++;
+  try {
+    return await render(request);
+  } finally {
+    rendering--;
+  }
+}
+
+async function render(request: Request) {
   const card = decodeShareCard(Object.fromEntries(new URL(request.url).searchParams));
   const ids = [...new Set(card.layout.map((it) => CREATURES[it.index].id))];
   const sprites = Object.fromEntries(
