@@ -5,6 +5,12 @@ import { useSyncExternalStore } from "react";
 export const MAX_DEPTH = 1000;
 
 /**
+ * 最初に潜る深さ。生き物の種類が多く、窓の前を横切るアノマロカリスとフルディアの
+ * 両方が出る薄明帯の上の方にする
+ */
+export const START_DEPTH = 250;
+
+/**
  * 突っつく動作の段階。
  * approach: 近づく / extend: アームを伸ばす / retract: 戻す / return: 元の位置へ戻る
  */
@@ -27,8 +33,8 @@ export type DiveState = {
 };
 
 const initialState: DiveState = {
-  targetDepth: 10,
-  depth: 10,
+  targetDepth: START_DEPTH,
+  depth: START_DEPTH,
   selectedId: null,
   focusKey: null,
   zoom: 1,
