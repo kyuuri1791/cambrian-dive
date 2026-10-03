@@ -10,6 +10,7 @@ import { InfoPanel } from "./hud/InfoPanel";
 import { Reticle } from "./hud/Reticle";
 import { TimeSlipIntro } from "./hud/TimeSlipIntro";
 import { PhotoBooth } from "./hud/PhotoBooth";
+import { CompleteCelebration } from "./hud/CompleteCelebration";
 
 // three.js はブラウザでしか動かないので、サーバーでは描画しない
 const Scene = dynamic(() => import("./scene/Scene"), {
@@ -58,6 +59,7 @@ export function DiveExperience() {
       </div>
 
       <Reticle />
+      <CompleteCelebration />
 
       {/* 起動時の演出。窓枠より下に置いて、窓の中だけで見せる */}
       <TimeSlipIntro />

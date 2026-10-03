@@ -1,6 +1,9 @@
 /**
  * 生き物のマスタデータ。
  * 生息深度はゲーム用の目安で、実際の生息環境を正確に表したものではありません。
+ * 全部を突っつくには全海域を回る必要があるよう、各海域に「そこにしかいない生き物」を置いている
+ * （浅瀬: ハイコウイクチス / 陽光帯: ピカイア / 薄明帯: ハルキゲニア・アイシェアイア /
+ *   深海: クテノラブドトゥス・エルドニア）。
  */
 
 export type ModelKind =
@@ -98,7 +101,7 @@ export const CREATURES: Creature[] = [
     model: "trilobite",
     behavior: "crawl",
     lengthCm: 8,
-    depth: [20, 1000],
+    depth: [0, 1000],
     count: 8,
     speed: 0.12,
     locality: "バージェス頁岩（カナダ）",
@@ -115,7 +118,7 @@ export const CREATURES: Creature[] = [
     model: "hallucigenia",
     behavior: "crawl",
     lengthCm: 2.5,
-    depth: [100, 650],
+    depth: [200, 600],
     count: 4,
     speed: 0.15,
     locality: "バージェス頁岩（カナダ）",
@@ -149,7 +152,7 @@ export const CREATURES: Creature[] = [
     model: "pikaia",
     behavior: "swim",
     lengthCm: 4,
-    depth: [0, 220],
+    depth: [30, 200],
     count: 5,
     speed: 0.5,
     locality: "バージェス頁岩（カナダ）",
@@ -166,7 +169,7 @@ export const CREATURES: Creature[] = [
     model: "haikouichthys",
     behavior: "swim",
     lengthCm: 2.5,
-    depth: [0, 130],
+    depth: [0, 30],
     count: 6,
     speed: 0.7,
     locality: "澄江（中国）",
@@ -198,7 +201,7 @@ export const CREATURES: Creature[] = [
     model: "ctenophore",
     behavior: "drift",
     lengthCm: 5,
-    depth: [250, 1000],
+    depth: [600, 1000],
     count: 6,
     speed: 0.05,
     locality: "バージェス頁岩（カナダ）",
@@ -233,7 +236,7 @@ export const CREATURES: Creature[] = [
     model: "waptia",
     behavior: "nearFloor",
     lengthCm: 8,
-    depth: [20, 400],
+    depth: [0, 400],
     count: 5,
     speed: 0.45,
     locality: "バージェス頁岩（カナダ）",
@@ -265,7 +268,7 @@ export const CREATURES: Creature[] = [
     model: "aysheaia",
     behavior: "crawl",
     lengthCm: 4,
-    depth: [120, 700],
+    depth: [200, 600],
     count: 3,
     speed: 0.1,
     locality: "バージェス頁岩（カナダ）",
@@ -297,7 +300,7 @@ export const CREATURES: Creature[] = [
     model: "eldonia",
     behavior: "drift",
     lengthCm: 10,
-    depth: [300, 1000],
+    depth: [600, 1000],
     count: 4,
     speed: 0.05,
     locality: "バージェス頁岩（カナダ）",

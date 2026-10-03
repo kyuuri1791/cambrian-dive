@@ -84,9 +84,15 @@ export function InfoPanel() {
     <div className="hud-panel max-h-full w-full overflow-y-auto p-3 sm:w-80 sm:p-4">
       <div className="flex items-baseline justify-between">
         <div className="hud-label">現在の海域</div>
-        <div className="text-[11px] text-emerald-200/80">
-          🦾 突っついた図鑑 {pokedCount}/{CREATURES.length}
-        </div>
+        {pokedCount >= CREATURES.length ? (
+          <div className="text-[11px] font-bold text-amber-300">
+            🏆 図鑑コンプリート {pokedCount}/{CREATURES.length}
+          </div>
+        ) : (
+          <div className="text-[11px] text-emerald-200/80">
+            🦾 突っついた図鑑 {pokedCount}/{CREATURES.length}
+          </div>
+        )}
       </div>
       <h2 className="text-lg font-bold text-amber-100">{zone.name}</h2>
       <p className="mt-1 hidden text-sm leading-relaxed text-cyan-50/80 sm:block">{zone.description}</p>

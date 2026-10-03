@@ -231,3 +231,61 @@ body {
     display: none;
   }
 }
+
+/* 図鑑コンプリートの演出。窓の下から泡が湧き上がる */
+.celebrate-bubble {
+  position: absolute;
+  bottom: -30px;
+  border-radius: 9999px;
+  border: 1.5px solid rgb(224 255 255 / 0.75);
+  background: radial-gradient(circle at 30% 30%, rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.05) 60%);
+  animation: celebrate-rise ease-in forwards;
+  opacity: 0;
+}
+
+@keyframes celebrate-rise {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(calc(var(--r) * -2.3)) scale(1.1);
+    opacity: 0;
+  }
+}
+
+.celebrate-text {
+  animation: celebrate-text 4.2s ease-out forwards;
+}
+
+@keyframes celebrate-text {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  12% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+  20% {
+    transform: scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .celebrate-bubble {
+    display: none;
+  }
+  .celebrate-text {
+    animation: none;
+  }
+}
