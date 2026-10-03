@@ -5,10 +5,10 @@ import { useSyncExternalStore } from "react";
 export const MAX_DEPTH = 1000;
 
 /**
- * 最初に潜る深さ。生き物の種類が多く、窓の前を横切るアノマロカリスとフルディアの
- * 両方が出る薄明帯の上の方にする
+ * 最初に潜る深さ。最初の海が明るく見えるよう陽光帯にする。
+ * 群れで泳ぐ生き物や、窓の前を横切るアノマロカリスも見られる
  */
-export const START_DEPTH = 250;
+export const START_DEPTH = 100;
 
 /**
  * 突っつく動作の段階。

@@ -26,7 +26,8 @@ export function hashString(s: string) {
   return h >>> 0;
 }
 
-const FADE_MARGIN = 30;
+// 範囲から出たあと、この幅（m）で薄くなって消える。小さいほど潜り始めてすぐ消える
+const FADE_MARGIN = 10;
 
 /** 水深に対する出現度合い (0〜1)。範囲の外側 FADE_MARGIN m でフェードする */
 export function presenceAt(depth: number, [min, max]: [number, number]) {
@@ -52,7 +53,7 @@ export function useDepthFade(
     if (!group) return;
     const target = presenceAt(diveStore.get().depth, range);
     const prev = fade.current;
-    let next = prev < 0 ? target : THREE.MathUtils.damp(prev, target, 3, dt);
+    let next = prev < 0 ? target : THREE.MathUtils.damp(prev, target, 6, dt);
     // damp は目標に近づくほど変化が小さくなり、いつまでも 0 や 1 にならない。
     // 目標の近くまで来たら合わせて、完全に消えたら確実に非表示にする
     if (Math.abs(next - target) < 0.01) next = target;
