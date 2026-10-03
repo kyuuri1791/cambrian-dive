@@ -125,8 +125,8 @@ export function PhotoBooth() {
 function CardDialog({ card, onClose }: { card: Card; onClose: () => void }) {
   const fileName = `cambrian-dive-${String(card.number).padStart(3, "0")}.jpg`;
   const shareText = card.name
-    ? `5億800万年前の海で${card.name}を撮影しました📷 #CAMBRIANDIVE #デプロイナウコンテスト`
-    : `5億800万年前の${card.zoneName}の海を撮影しました📷 #CAMBRIANDIVE #デプロイナウコンテスト`;
+    ? `5億800万年前の海で${card.name}を撮影しました📷 #CAMBRIANDIVE`
+    : `5億800万年前の${card.zoneName}の海を撮影しました📷 #CAMBRIANDIVE`;
 
   const share = async () => {
     const file = new File([card.blob], fileName, { type: "image/jpeg" });
