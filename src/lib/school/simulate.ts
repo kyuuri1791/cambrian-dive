@@ -148,7 +148,7 @@ export function stepSchool(state: SchoolState, input: TickInput) {
   gy /= count;
   gz /= count;
   const regroupW = 0.25 * (1 - panic) * (1 - panic);
-  const speedLimit = maxSpeed * (1 + 2.5 * panic);
+  const speedLimit = maxSpeed * (1 + 3.5 * panic);
   // 驚いているときは、群れのまとまりより逃げることを優先する
   const cohesionW = 0.5 * (1 - panic);
   const alignW = 1.0 * (1 - 0.6 * panic);
@@ -253,18 +253,31 @@ export function stepSchool(state: SchoolState, input: TickInput) {
       }
     }
 
-    // 突っつかれた位置から散る
+    // 突っつかれたら、ばらばらの方向へぱっと散る。
+    // 突っつかれた位置から離れる向き・群れの中心から外向き・個体ごとのぶれを混ぜる。
+    // 時間に関係なく一瞬で速くなるよう、速度に直接足す
     for (const d of disturb) {
       const dx = x - d.x;
       const dz = z - d.z;
       const dist = Math.hypot(dx, dz);
-      if (dist < DISTURB_RADIUS) {
-        const k = maxSpeed * 30 * (1 - dist / DISTURB_RADIUS);
-        // ちょうど同じ位置なら、個体ごとに違う向きへ逃がす
-        const angle = dist > 1e-3 ? Math.atan2(dz, dx) : phases[i];
-        ax += Math.cos(angle) * k;
-        az += Math.sin(angle) * k;
-      }
+      if (dist > DISTURB_RADIUS) continue;
+      const awayX = dist > 1e-3 ? dx / dist : 0;
+      const awayZ = dist > 1e-3 ? dz / dist : 0;
+      const ox = x - gx;
+      const oz = z - gz;
+      const od = Math.hypot(ox, oz);
+      const outX = od > 1e-3 ? ox / od : 0;
+      const outZ = od > 1e-3 ? oz / od : 0;
+      const jitter = phases[i] * 2.3;
+      let dirX = awayX * 0.6 + outX + Math.cos(jitter) * 0.8;
+      let dirZ = awayZ * 0.6 + outZ + Math.sin(jitter) * 0.8;
+      const len = Math.hypot(dirX, dirZ) || 1;
+      dirX /= len;
+      dirZ /= len;
+      const k = maxSpeed * 4.5 * (1 - (dist / DISTURB_RADIUS) * 0.5);
+      vx += dirX * k;
+      vz += dirZ * k;
+      vy += (Math.sin(jitter * 1.7) * 0.5) * k * (mode === "swim" ? 1 : 0.2);
     }
 
     vx += ax * dt;
@@ -294,8 +307,8 @@ export function stepSchool(state: SchoolState, input: TickInput) {
     data[o + 5] = vz;
   }
 
-  // 驚きは少しずつおさまる
-  state.panic *= Math.exp(-dt / 1.6);
+  // 驚きは少しずつおさまる（その間はばらけたまま泳ぐ）
+  state.panic *= Math.exp(-dt / 2.4);
 }
 
 /** 有効な群れをすべて進める */

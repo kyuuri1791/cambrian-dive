@@ -112,7 +112,7 @@ export const CREATURES: Creature[] = [
     behavior: "crawl",
     lengthCm: 8,
     depth: [0, 1000],
-    count: 8,
+    count: 5,
     speed: 0.12,
     locality: "バージェス頁岩（カナダ）",
     description:
@@ -129,7 +129,7 @@ export const CREATURES: Creature[] = [
     behavior: "crawl",
     lengthCm: 2.5,
     depth: [200, 600],
-    count: 4,
+    count: 3,
     speed: 0.15,
     locality: "バージェス頁岩（カナダ）",
     description:
@@ -199,7 +199,7 @@ export const CREATURES: Creature[] = [
     behavior: "crawl",
     lengthCm: 3.5,
     depth: [30, 550],
-    count: 4,
+    count: 3,
     speed: 0.08,
     locality: "バージェス頁岩（カナダ）",
     description:
@@ -267,7 +267,7 @@ export const CREATURES: Creature[] = [
     behavior: "crawl",
     lengthCm: 13,
     depth: [60, 550],
-    count: 3,
+    count: 2,
     speed: 0.12,
     locality: "バージェス頁岩（カナダ）",
     description:
@@ -283,7 +283,7 @@ export const CREATURES: Creature[] = [
     behavior: "crawl",
     lengthCm: 4,
     depth: [200, 600],
-    count: 3,
+    count: 2,
     speed: 0.1,
     locality: "バージェス頁岩（カナダ）",
     description:
@@ -299,7 +299,7 @@ export const CREATURES: Creature[] = [
     behavior: "crawl",
     lengthCm: 8,
     depth: [200, 1000],
-    count: 5,
+    count: 3,
     speed: 0.04,
     locality: "バージェス頁岩（カナダ）",
     description:
@@ -331,7 +331,7 @@ export const CREATURES: Creature[] = [
     behavior: "sessile",
     lengthCm: 2,
     depth: [150, 900],
-    count: 5,
+    count: 3,
     speed: 0,
     locality: "バージェス頁岩（カナダ）",
     description:
