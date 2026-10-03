@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { CREATURES } from "@/data/creatures";
 import { zoneAt } from "@/data/zones";
 import { diveStore } from "@/lib/diveStore";
@@ -114,7 +114,10 @@ export function PhotoBooth() {
         aria-label="撮影する"
         title="撮影する"
       >
-        <CenteredEmoji>📷</CenteredEmoji>
+        {/* 絵文字だと端末ごとに絵柄や位置が変わり、読み込み時に位置も動くので、
+            絵の範囲に合わせて中央を揃えた画像（Noto Color Emoji のカメラ）を使う */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- 小さな固定のSVGなので最適化はいらない */}
+        <img src="/icons/camera.svg" alt="" width={64} height={64} className="h-[50%] w-[50%]" draggable={false} />
       </button>
 
       {card && <CardDialog card={card} onClose={() => setCard(null)} />}
@@ -180,48 +183,5 @@ function CardDialog({ card, onClose }: { card: Card; onClose: () => void }) {
         </div>
       </div>
     </div>
-  );
-}
-
-/**
- * 絵文字を上下の真ん中に置く。
- * 絵文字は文字の基準線の位置がフォントごとに違い、そのままだと少し下にずれて見えるので、
- * 表示する端末のフォントで絵文字の実際の上端・下端を測り、真ん中に来るようずらす
- */
-function CenteredEmoji({ children }: { children: ReactNode }) {
-  const ref = useRef<HTMLSpanElement>(null);
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const ctx = document.createElement("canvas").getContext("2d");
-    if (ctx) {
-      const style = getComputedStyle(el);
-      const size = parseFloat(style.fontSize);
-      ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-      const m = ctx.measureText(el.textContent ?? "");
-      if (m.fontBoundingBoxAscent) {
-        // 行の高さを文字の大きさと同じにしたとき、行の上端から基準線までの距離
-        const fontHeight = m.fontBoundingBoxAscent + m.fontBoundingBoxDescent;
-        const baseline = (size - fontHeight) / 2 + m.fontBoundingBoxAscent;
-        // 絵文字の実際の見た目の中心と、行の中心の差だけずらす
-        const glyphCenter =
-          baseline - (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
-        el.style.transform = `translateY(${size / 2 - glyphCenter}px)`;
-      }
-    }
-    // 測り終わってから見せる（位置が動く様子を見せない）
-    el.style.opacity = "1";
-  }, []);
-
-  return (
-    <span
-      ref={ref}
-      className="block leading-none transition-opacity duration-200"
-      style={{ opacity: 0 }}
-      aria-hidden
-    >
-      {children}
-    </span>
   );
 }

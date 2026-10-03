@@ -56,3 +56,4 @@ npm run build:card-assets
 ## ライセンス
 
 - フォント: [Noto Sans JP](https://fonts.google.com/noto/specimen/Noto+Sans+JP)（SIL Open Font License 1.1）
+- 撮影ボタンのカメラのアイコン（`public/icons/camera.svg`）: [Noto Emoji](https://github.com/googlefonts/noto-emoji)（Apache License 2.0）
