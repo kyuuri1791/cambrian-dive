@@ -52,13 +52,15 @@ export function useDepthFade(
     if (!group) return;
     const target = presenceAt(diveStore.get().depth, range);
     const prev = fade.current;
-    const next =
-      prev < 0 ? target : THREE.MathUtils.damp(prev, target, 3, dt);
+    let next = prev < 0 ? target : THREE.MathUtils.damp(prev, target, 3, dt);
+    // damp は目標に近づくほど変化が小さくなり、いつまでも 0 や 1 にならない。
+    // 目標の近くまで来たら合わせて、完全に消えたら確実に非表示にする
+    if (Math.abs(next - target) < 0.01) next = target;
     fade.current = next;
 
-    if (Math.abs(next - prev) < 0.001) return;
+    if (next === prev) return;
 
-    group.visible = next > 0.01;
+    group.visible = next > 0;
     group.traverse((obj) => {
       const mesh = obj as THREE.Mesh;
       if (!mesh.isMesh) return;
