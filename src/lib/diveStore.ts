@@ -45,6 +45,12 @@ const initialState: DiveState = {
 let state = initialState;
 const listeners = new Set<() => void>();
 
+/**
+ * URL（?depth= や ?creature=）で始める深さを指定されたか。
+ * 指定されたときは、到着時に水面から潜っていく描写をしない
+ */
+export const startOptions = { fromUrl: false };
+
 /** 3D シーン側で毎フレーム参照する値。再レンダリング不要なので store とは分ける */
 export const motion = {
   /** 潜行速度 (m/s)。正の値で潜っている */

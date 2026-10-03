@@ -73,9 +73,22 @@ export function diveTo(depth: number) {
   }
 }
 
+/**
+ * 選択を解除する（✕ボタンや Esc で、はっきり閉じる操作をしたとき）。
+ * 突っついている途中でも解除する。アームは PokeArm が引っ込めて元の位置へ戻る
+ */
 export function clearSelection() {
-  if (diveStore.get().pokePhase !== "idle") return;
   diveStore.set({ selectedId: null, focusKey: null });
+}
+
+/**
+ * 窓の何もないところをクリックしたときの解除。
+ * アームを伸ばしている最中のクリックは、うっかりのことが多いので無視する
+ */
+export function clearSelectionByMissedClick() {
+  const { pokePhase } = diveStore.get();
+  if (pokePhase === "approach" || pokePhase === "extend") return;
+  clearSelection();
 }
 
 /** 追いかけている生き物をアームで突っつく */

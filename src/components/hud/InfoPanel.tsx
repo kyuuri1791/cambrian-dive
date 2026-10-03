@@ -12,7 +12,8 @@ function formatLength(cm: number) {
 export function InfoPanel() {
   const selectedId = useDive((s) => s.selectedId);
   const tracking = useDive((s) => s.focusKey !== null);
-  const pokedCount = useDive((s) => s.pokedIds.length);
+  const pokedIds = useDive((s) => s.pokedIds);
+  const pokedCount = pokedIds.length;
   const alreadyPoked = useDive((s) => s.selectedId !== null && s.pokedIds.includes(s.selectedId));
   // 再描画を減らすため、水深は 10m 単位で購読する
   const depth = useDive((s) => Math.round(s.depth / 10) * 10);
@@ -91,17 +92,25 @@ export function InfoPanel() {
       <p className="mt-1 hidden text-sm leading-relaxed text-cyan-50/80 sm:block">{zone.description}</p>
       <div className="hud-label mt-3">この深さで見られる生き物</div>
       <ul className="mt-1 flex gap-1.5 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
-        {nearby.map((c) => (
-          <li key={c.id}>
-            <button
-              type="button"
-              className="hud-button whitespace-nowrap px-2 py-1 text-xs"
-              onClick={() => selectCreature(c.id)}
-            >
-              {c.name}
-            </button>
-          </li>
-        ))}
+        {nearby.map((c) => {
+          // 突っついた生き物は ✓ を付けて色を変え、まだのものと見分けられるようにする
+          const poked = pokedIds.includes(c.id);
+          return (
+            <li key={c.id}>
+              <button
+                type="button"
+                className={`hud-button whitespace-nowrap px-2 py-1 text-xs ${
+                  poked ? "!border-emerald-300/60 !bg-emerald-300/15 !text-emerald-100" : ""
+                }`}
+                onClick={() => selectCreature(c.id)}
+                aria-label={poked ? `${c.name}（突っついた）` : c.name}
+              >
+                {c.name}
+                {poked && <span className="ml-1 text-emerald-300" aria-hidden>✓</span>}
+              </button>
+            </li>
+          );
+        })}
         {nearby.length === 0 && (
           <li className="text-sm text-cyan-100/60">見当たらない…</li>
         )}

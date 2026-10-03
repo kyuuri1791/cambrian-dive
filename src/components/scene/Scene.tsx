@@ -3,7 +3,7 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { diveStore, motion } from "@/lib/diveStore";
-import { VISIBLE_FADE, clearSelection, getFocusEntry } from "@/lib/focus";
+import { VISIBLE_FADE, clearSelectionByMissedClick, getFocusEntry } from "@/lib/focus";
 import { Ocean } from "./Ocean";
 import { CreatureSwarm } from "./CreatureSwarm";
 import { PokeArm, approachPoint, focusCenter } from "./PokeArm";
@@ -29,7 +29,7 @@ export default function Scene() {
     <Canvas
       camera={{ position: [0, 0, 0], fov: BASE_FOV, near: 0.05, far: 120 }}
       dpr={[1, 2]}
-      onPointerMissed={clearSelection}
+      onPointerMissed={clearSelectionByMissedClick}
     >
       <DepthController />
       <CameraRig />

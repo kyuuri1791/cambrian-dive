@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect } from "react";
-import { diveStore } from "@/lib/diveStore";
+import { diveStore, startOptions } from "@/lib/diveStore";
 import { selectCreature } from "@/lib/focus";
 import { CREATURES } from "@/data/creatures";
 import { DepthGauge, DepthGaugeCompact, useDepthKeys } from "./hud/DepthGauge";
@@ -34,6 +34,7 @@ export function DiveExperience() {
       if (!creature) return;
       depth = (creature.depth[0] + creature.depth[1]) / 2;
     }
+    startOptions.fromUrl = true;
     diveStore.setTargetDepth(depth);
     diveStore.set({ depth: diveStore.get().targetDepth });
     if (!creature) return;
