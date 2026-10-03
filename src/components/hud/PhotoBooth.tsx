@@ -100,18 +100,17 @@ export function PhotoBooth() {
       {flash > 0 && (
         <div
           key={flash}
-          className="shutter-flash pointer-events-none absolute left-1/2 top-1/2 h-[calc(var(--r)*2)] w-[calc(var(--r)*2)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
+          className="shutter-flash pointer-events-none absolute left-[var(--cx)] top-[var(--cy)] h-[calc(var(--r)*2)] w-[calc(var(--r)*2)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
           aria-hidden
         />
       )}
 
-      {/* 撮影ボタン。丸窓の右上の縁に付ける（下の「突っつく」と離す）。
-          スマホでは右上に深度計が重なるので左上にする */}
+      {/* 撮影ボタン。丸窓の右上の縁に付ける（下の「突っつく」と離す） */}
       <button
         type="button"
         onClick={takePhoto}
         disabled={busy}
-        className="photo-button absolute left-[calc(50%-var(--r)*0.72)] top-[calc(50%-var(--r)*0.72)] sm:left-[calc(50%+var(--r)*0.72)] -translate-x-1/2 -translate-y-1/2"
+        className="photo-button absolute left-[calc(var(--cx)+var(--r)*0.72)] top-[calc(var(--cy)-var(--r)*0.72)] -translate-x-1/2 -translate-y-1/2"
         aria-label="撮影する"
         title="撮影する"
       >

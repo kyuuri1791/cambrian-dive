@@ -96,11 +96,10 @@ export function TimeSlipIntro() {
   return (
     <div
       ref={rootRef}
-      className="timeslip absolute left-1/2 top-1/2 h-[calc(var(--r)*2)] w-[calc(var(--r)*2)] -translate-x-1/2 -translate-y-1/2 cursor-pointer overflow-hidden rounded-full bg-[#03080e]"
+      className="timeslip absolute left-[var(--cx)] top-[var(--cy)] h-[calc(var(--r)*2)] w-[calc(var(--r)*2)] -translate-x-1/2 -translate-y-1/2 cursor-pointer overflow-hidden rounded-full bg-[#03080e]"
       onClick={() => skipRef.current()}
       role="status"
       aria-live="polite"
-      title="クリックでスキップ"
     >
       {/* 中心から広がる波紋 */}
       {[0, 1, 2].map((i) => (

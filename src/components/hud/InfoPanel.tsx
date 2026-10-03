@@ -80,7 +80,7 @@ export function InfoPanel() {
   }
 
   return (
-    <div className="hud-panel w-full p-3 sm:w-80 sm:p-4">
+    <div className="hud-panel max-h-full w-full overflow-y-auto p-3 sm:w-80 sm:p-4">
       <div className="flex items-baseline justify-between">
         <div className="hud-label">現在の海域</div>
         <div className="text-[11px] text-emerald-200/80">
@@ -106,7 +106,7 @@ export function InfoPanel() {
           <li className="text-sm text-cyan-100/60">見当たらない…</li>
         )}
       </ul>
-      <p className="mt-2 text-xs text-cyan-100/50 sm:mt-3">
+      <p className="hint-roomy-only mt-2 text-xs text-cyan-100/50 sm:mt-3">
         名前を押すか、窓の外の生き物をクリックすると近くで観察できます
       </p>
     </div>

@@ -5,7 +5,6 @@ import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { diveStore } from "@/lib/diveStore";
 import { getVisibleCreatures } from "@/lib/focus";
-import { PORTHOLE_RADIUS_VMIN } from "@/lib/porthole";
 import { CREATURES } from "@/data/creatures";
 import { MAX_LAYOUT, type LayoutItem } from "@/lib/shareCard";
 
@@ -42,10 +41,12 @@ export function PhotoCapture() {
       const src = gl.domElement;
       const rect = src.getBoundingClientRect();
       const dpr = src.width / rect.width;
-      // 丸窓は画面の中央にあり、半径は CSS で vmin 指定している
-      const radius = (PORTHOLE_RADIUS_VMIN / 100) * Math.min(window.innerWidth, window.innerHeight);
-      const cx = window.innerWidth / 2 - rect.left;
-      const cy = window.innerHeight / 2 - rect.top;
+      // 丸窓の位置と大きさは CSS 変数で決まるので、実際の要素から読み取る
+      const glass = document.querySelector(".porthole-glass")?.getBoundingClientRect();
+      if (!glass) return null;
+      const radius = glass.width / 2;
+      const cx = glass.left + radius - rect.left;
+      const cy = glass.top + radius - rect.top;
 
       const photo = document.createElement("canvas");
       photo.width = PHOTO_SIZE;

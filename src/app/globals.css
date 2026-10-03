@@ -3,8 +3,24 @@
 :root {
   --background: #0b1116;
   --foreground: #e6f6f8;
-  /* 窓の半径。src/lib/porthole.ts の PORTHOLE_RADIUS_VMIN と合わせる */
+  /*
+   * 窓の中心 (--cx, --cy) と半径 (--r)。窓に合わせて置くものはすべてこれを使う。
+   * 撮影はこの位置を .porthole-glass から読み取って切り抜く
+   */
   --r: 44vmin;
+  --cx: 50vw;
+  --cy: 50dvh;
+}
+
+/*
+ * スマホの縦画面では、上からタイトル・窓・深度計・情報パネルの順に並べる。
+ * 窓はタイトルのすぐ下に置き、画面が短いときは下のパネルの場所を残して小さくする
+ */
+@media (max-width: 639px) {
+  :root {
+    --r: min(44vw, calc((100dvh - 330px) / 2));
+    --cy: calc(84px + var(--r));
+  }
 }
 
 body {
@@ -18,7 +34,7 @@ body {
 .porthole {
   background:
     radial-gradient(
-      circle at 50% 50%,
+      circle at var(--cx) var(--cy),
       transparent 0,
       transparent var(--r),
       #0a0e12 calc(var(--r) + 1px),
@@ -30,8 +46,8 @@ body {
 
 .porthole-glass {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  left: var(--cx);
+  top: var(--cy);
   width: calc(var(--r) * 2);
   height: calc(var(--r) * 2);
   transform: translate(-50%, -50%);
@@ -44,8 +60,8 @@ body {
 
 .porthole-ring {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  left: var(--cx);
+  top: var(--cy);
   width: calc(var(--r) * 2 + 5vmin);
   height: calc(var(--r) * 2 + 5vmin);
   transform: translate(-50%, -50%);
@@ -206,5 +222,12 @@ body {
   }
   to {
     opacity: 0;
+  }
+}
+
+/* 画面の高さが低いスマホでは、パネルがはみ出さないよう補足の案内を出さない */
+@media (max-width: 639px) and (max-height: 720px) {
+  .hint-roomy-only {
+    display: none;
   }
 }

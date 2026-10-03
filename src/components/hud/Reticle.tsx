@@ -29,7 +29,7 @@ export function Reticle() {
         aria-hidden
       >
         <svg
-          className="absolute left-1/2 top-1/2 h-[60vmin] w-[60vmin] -translate-x-1/2 -translate-y-1/2"
+          className="absolute left-[var(--cx)] top-[var(--cy)] h-[calc(var(--r)*1.36)] w-[calc(var(--r)*1.36)] -translate-x-1/2 -translate-y-1/2"
           viewBox="-100 -100 200 200"
         >
           <g
@@ -60,7 +60,7 @@ export function Reticle() {
             ))}
           </g>
         </svg>
-        <div className="absolute left-1/2 top-[calc(50%+31vmin)] -translate-x-1/2 font-mono text-xs tracking-widest text-emerald-200/80">
+        <div className="absolute left-[var(--cx)] top-[calc(var(--cy)+var(--r)*0.7)] hidden -translate-x-1/2 sm:block font-mono text-xs tracking-widest text-emerald-200/80">
           ZOOM ×{zoom.toFixed(1)}
           {tracking && <span className="ml-2 animate-pulse">TRACKING</span>}
         </div>
@@ -77,8 +77,9 @@ function PokeButton() {
   const busy = pokePhase !== "idle";
   if (!tracking && !busy) return null;
 
+  // 窓の下の縁から一定の距離だけ内側に置く（窓の大きさに比例させると、小さい窓で縁にかかる）
   return (
-    <div className="absolute left-1/2 top-[calc(50%+35vmin)] -translate-x-1/2">
+    <div className="absolute left-[var(--cx)] top-[calc(var(--cy)+var(--r)-64px)] -translate-x-1/2">
       <button
         type="button"
         onClick={requestPoke}

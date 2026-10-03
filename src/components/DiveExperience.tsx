@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { diveStore } from "@/lib/diveStore";
 import { selectCreature } from "@/lib/focus";
 import { CREATURES } from "@/data/creatures";
-import { DepthGauge } from "./hud/DepthGauge";
+import { DepthGauge, DepthGaugeCompact, useDepthKeys } from "./hud/DepthGauge";
 import { InfoPanel } from "./hud/InfoPanel";
 import { Reticle } from "./hud/Reticle";
 import { TimeSlipIntro } from "./hud/TimeSlipIntro";
@@ -22,6 +22,8 @@ const Scene = dynamic(() => import("./scene/Scene"), {
 });
 
 export function DiveExperience() {
+  useDepthKeys();
+
   // ?depth=300 で開始水深、?creature=marrella で最初に追いかける生き物を指定できる
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -49,7 +51,8 @@ export function DiveExperience() {
 
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-[#0b1116] text-cyan-50">
-      <div className="absolute inset-0">
+      {/* 3D の中心が窓の中心に来るよう、窓の中心の高さの 2 倍の高さにする */}
+      <div className="absolute inset-x-0 top-0 h-[calc(var(--cy)*2)]">
         <Scene />
       </div>
 
@@ -74,7 +77,7 @@ export function DiveExperience() {
 
       <PhotoBooth />
 
-      <header className="pointer-events-none absolute left-4 right-32 top-4 sm:right-auto">
+      <header className="pointer-events-none absolute left-4 right-4 top-4 sm:right-auto">
         <h1 className="text-base font-bold tracking-widest text-amber-200 sm:text-xl">
           CAMBRIAN DIVE
         </h1>
@@ -83,17 +86,18 @@ export function DiveExperience() {
         </p>
       </header>
 
-      <div className="pointer-events-auto absolute bottom-6 left-4 right-4 max-h-[40%] sm:right-auto sm:top-20 sm:bottom-auto sm:max-h-[calc(100%-6rem)]">
+      {/* スマホでは窓の下に深度計、その下に情報パネル。PC では左に情報パネル、右に深度計 */}
+      <div className="pointer-events-auto absolute left-4 right-4 top-[calc(var(--cy)+var(--r)+16px)] sm:hidden">
+        <DepthGaugeCompact />
+      </div>
+
+      <div className="pointer-events-auto absolute bottom-3 left-4 right-4 top-[calc(var(--cy)+var(--r)+82px)] flex flex-col sm:bottom-auto sm:right-auto sm:top-20 sm:max-h-[calc(100%-6rem)]">
         <InfoPanel />
       </div>
 
-      <div className="pointer-events-auto absolute right-4 top-4">
+      <div className="pointer-events-auto absolute right-4 top-4 hidden sm:block">
         <DepthGauge />
       </div>
-
-      <p className="pointer-events-none absolute bottom-1 right-4 text-[10px] text-cyan-100/40 sm:bottom-2">
-        ※ 生息深度や大きさはゲーム用の目安です
-      </p>
     </main>
   );
 }
