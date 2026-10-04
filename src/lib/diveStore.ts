@@ -32,9 +32,10 @@ export type DiveState = {
   pokedIds: string[];
 };
 
+// 起動時の演出の間は水面（0m）にいて、到着してから START_DEPTH まで潜る
 const initialState: DiveState = {
-  targetDepth: START_DEPTH,
-  depth: START_DEPTH,
+  targetDepth: 0,
+  depth: 0,
   selectedId: null,
   focusKey: null,
   zoom: 1,

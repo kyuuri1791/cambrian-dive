@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { diveStore, startOptions } from "@/lib/diveStore";
+import { START_DEPTH, diveStore, startOptions } from "@/lib/diveStore";
 
 /** 到着する時代（年前） */
 const TARGET_YEARS_AGO = 508_000_000;
@@ -58,7 +58,14 @@ export function TimeSlipIntro() {
     const arrive = () => {
       if (arrived) return;
       arrived = true;
-      if (DIVE_IN_ON_ARRIVAL && !startOptions.fromUrl) diveStore.set({ depth: 0 });
+      // URL で深さを指定されたときは、その深さからそのまま始める
+      if (startOptions.fromUrl) return;
+      if (DIVE_IN_ON_ARRIVAL) {
+        // 水面から最初の深さまで潜っていく
+        diveStore.setTargetDepth(START_DEPTH);
+      } else {
+        diveStore.set({ depth: START_DEPTH, targetDepth: START_DEPTH });
+      }
     };
 
     skipRef.current = () => {
