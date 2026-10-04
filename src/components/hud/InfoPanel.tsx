@@ -2,7 +2,7 @@
 
 import { CREATURES } from "@/data/creatures";
 import { zoneAt } from "@/data/zones";
-import { useDive } from "@/lib/diveStore";
+import { displayDepth, useDive } from "@/lib/diveStore";
 import { clearSelection, selectCreature } from "@/lib/focus";
 
 function formatLength(cm: number) {
@@ -16,7 +16,7 @@ export function InfoPanel() {
   const pokedCount = pokedIds.length;
   const alreadyPoked = useDive((s) => s.selectedId !== null && s.pokedIds.includes(s.selectedId));
   // 再描画を減らすため、水深は 10m 単位で購読する
-  const depth = useDive((s) => Math.round(s.depth / 10) * 10);
+  const depth = useDive((s) => Math.round(displayDepth(s) / 10) * 10);
   const selected = CREATURES.find((c) => c.id === selectedId);
   const nearby = CREATURES.filter((c) => depth >= c.depth[0] && depth <= c.depth[1]);
   const zone = zoneAt(depth);

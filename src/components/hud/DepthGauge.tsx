@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type MouseEvent, type PointerEvent } from "react";
-import { MAX_DEPTH, diveStore, motion, useDive } from "@/lib/diveStore";
+import { MAX_DEPTH, diveStore, displayDepth, motion, useDive } from "@/lib/diveStore";
 import { ZONES, zoneAt } from "@/data/zones";
 import { diveTo } from "@/lib/focus";
 
@@ -105,8 +105,9 @@ function LeverButton({ direction, className }: { direction: 1 | -1; className?: 
 }
 
 function useDepthState() {
-  const depth = useDive((s) => s.depth);
-  const target = useDive((s) => s.targetDepth);
+  const depth = useDive(displayDepth);
+  // 演出中（水面として見せている間）は、潜行中の表示も出さない
+  const target = useDive((s) => (s.arrived ? s.targetDepth : 0));
   const zone = zoneAt(depth);
   const moving = Math.abs(target - depth) > 0.5;
   return { depth, target, zone, moving };

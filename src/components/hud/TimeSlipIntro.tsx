@@ -59,13 +59,12 @@ export function TimeSlipIntro() {
       if (arrived) return;
       arrived = true;
       // URL で深さを指定されたときは、その深さからそのまま始める
-      if (startOptions.fromUrl) return;
-      if (DIVE_IN_ON_ARRIVAL) {
-        // 水面から最初の深さまで潜っていく
-        diveStore.setTargetDepth(START_DEPTH);
-      } else {
-        diveStore.set({ depth: START_DEPTH, targetDepth: START_DEPTH });
+      if (startOptions.fromUrl || !DIVE_IN_ON_ARRIVAL) {
+        diveStore.set({ arrived: true });
+        return;
       }
+      // 水面から最初の深さまで潜っていく
+      diveStore.set({ arrived: true, depth: 0, targetDepth: START_DEPTH });
     };
 
     skipRef.current = () => {

@@ -30,17 +30,24 @@ export type DiveState = {
   pokePhase: PokePhase;
   /** これまでに突っついた生き物 ID */
   pokedIds: string[];
+  /** 起動時の演出が終わって、カンブリア紀に到着したか */
+  arrived: boolean;
 };
 
-// 起動時の演出の間は水面（0m）にいて、到着してから START_DEPTH まで潜る
+/*
+ * 起動時の演出の間も、窓の裏では START_DEPTH の海を描いておく。
+ * そこにいる生き物の描画の準備が演出中に済むので、到着後に潜るときに引っかからない。
+ * 深度計などの表示は、到着するまで 0m（水面）として見せる（displayDepth を参照）
+ */
 const initialState: DiveState = {
-  targetDepth: 0,
-  depth: 0,
+  targetDepth: START_DEPTH,
+  depth: START_DEPTH,
   selectedId: null,
   focusKey: null,
   zoom: 1,
   pokePhase: "idle",
   pokedIds: [],
+  arrived: false,
 };
 
 let state = initialState;
@@ -85,4 +92,9 @@ export function useDive<T>(selector: (s: DiveState) => T): T {
     () => selector(state),
     () => selector(initialState),
   );
+}
+
+/** 画面に表示する水深。起動時の演出中は水面（0m）として見せる */
+export function displayDepth(s: DiveState) {
+  return s.arrived ? s.depth : 0;
 }

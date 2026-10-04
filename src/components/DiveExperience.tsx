@@ -36,6 +36,8 @@ export function DiveExperience() {
       depth = (creature.depth[0] + creature.depth[1]) / 2;
     }
     startOptions.fromUrl = true;
+    // URL で指定した深さは、演出中から深度計に表示する
+    diveStore.set({ arrived: true });
     diveStore.setTargetDepth(depth);
     diveStore.set({ depth: diveStore.get().targetDepth });
     if (!creature) return;
