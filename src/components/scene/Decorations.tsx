@@ -25,32 +25,46 @@ const DECOR_TYPES: { kind: DecorKind; depth: [number, number]; count: number }[]
   { kind: "rock", depth: [0, 1000], count: 18 },
 ];
 
-export function Decorations() {
-  const items = useMemo(() => {
-    const rand = createRandom(1234);
-    const list: Decor[] = [];
-    for (const type of DECOR_TYPES) {
-      for (let i = 0; i < type.count; i++) {
-        // 範囲を少しずつずらして、潜るにつれて徐々に入れ替わるようにする
-        const span = type.depth[1] - type.depth[0];
-        const a = type.depth[0] + rand() * span * 0.3;
-        const b = type.depth[1] - rand() * span * 0.3;
-        list.push({
-          kind: type.kind,
-          x: (rand() * 2 - 1) * 20,
-          z: -5 - rand() * 32,
-          scale: 0.6 + rand() * 0.9,
-          rotation: rand() * Math.PI * 2,
-          depth: [Math.min(a, b), Math.max(a, b)],
-        });
-      }
+/** 配置は毎回同じ。海底を這う生き物が岩を避けるのにも使うので、先に決めておく */
+const ITEMS: Decor[] = (() => {
+  const rand = createRandom(1234);
+  const list: Decor[] = [];
+  for (const type of DECOR_TYPES) {
+    for (let i = 0; i < type.count; i++) {
+      // 範囲を少しずつずらして、潜るにつれて徐々に入れ替わるようにする
+      const span = type.depth[1] - type.depth[0];
+      const a = type.depth[0] + rand() * span * 0.3;
+      const b = type.depth[1] - rand() * span * 0.3;
+      list.push({
+        kind: type.kind,
+        x: (rand() * 2 - 1) * 20,
+        z: -5 - rand() * 32,
+        scale: 0.6 + rand() * 0.9,
+        rotation: rand() * Math.PI * 2,
+        depth: [Math.min(a, b), Math.max(a, b)],
+      });
     }
-    return list;
-  }, []);
+  }
+  return list;
+})();
 
+/** 岩の形（横幅・高さ・奥行きの倍率） */
+function rockShape(seed: number) {
+  const rand = createRandom(seed + 31);
+  return [0.5 + rand() * 0.8, 0.3 + rand() * 0.4, 0.5 + rand() * 0.7] as const;
+}
+
+/** 海底を這う生き物がすり抜けないようにする、岩の位置と大きさ（真上から見た円） */
+export const ROCK_OBSTACLES = ITEMS.flatMap((d, i) => {
+  if (d.kind !== "rock") return [];
+  const [w, , l] = rockShape(i);
+  return [{ x: d.x, z: d.z, radius: d.scale * Math.max(w, l) * 0.9, depth: d.depth }];
+});
+
+export function Decorations() {
   return (
     <>
-      {items.map((d, i) => (
+      {ITEMS.map((d, i) => (
         <DecorItem key={i} decor={d} seed={i} />
       ))}
     </>
@@ -196,10 +210,7 @@ function Choia() {
 }
 
 function Rock({ seed }: { seed: number }) {
-  const shape = useMemo(() => {
-    const rand = createRandom(seed + 31);
-    return [0.5 + rand() * 0.8, 0.3 + rand() * 0.4, 0.5 + rand() * 0.7] as const;
-  }, [seed]);
+  const shape = useMemo(() => rockShape(seed), [seed]);
   return (
     <mesh position={[0, shape[1] * 0.3, 0]} scale={shape}>
       <dodecahedronGeometry args={[1, 0]} />

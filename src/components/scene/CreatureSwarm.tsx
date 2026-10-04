@@ -7,7 +7,8 @@ import { CREATURES, displayLength, type Creature, type ModelKind } from "@/data/
 import { diveStore, startOptions } from "@/lib/diveStore";
 import { VISIBLE_FADE, registerCreature, selectCreature } from "@/lib/focus";
 import { getSchools } from "@/lib/school/client";
-import { createRandom, floorY, hashString, useDepthFade } from "./utils";
+import { createRandom, floorY, hashString, presenceAt, useDepthFade } from "./utils";
+import { ROCK_OBSTACLES } from "./Decorations";
 import type { ModelProps } from "./models/types";
 import { Anomalocaris, Opabinia } from "./models/FlappedSwimmers";
 import { Hallucigenia, Trilobite, Wiwaxia } from "./models/Crawlers";
@@ -82,6 +83,62 @@ function cancelFlyby(flyby: RefObject<Flyby | null>, key: number) {
 const frustum = new THREE.Frustum();
 const projScreen = new THREE.Matrix4();
 const tmpSphere = new THREE.Sphere();
+
+/**
+ * 海底にいる生き物の位置と大きさ（真上から見た円）。
+ * 這う生き物がお互いや固着した生き物をすり抜けないようにするのに使う
+ */
+type FloorBody = { object: THREE.Object3D; radius: number; moves: boolean };
+const floorBodies = new Map<number, FloorBody>();
+
+/** 体の長さに対する、ぶつかる範囲の半径の割合。細長い体を円で近似するので小さめにする */
+const BODY_RADIUS = 0.4;
+
+/**
+ * 海底を這う生き物が、ほかの生き物や岩に重なっていたら押し出し、
+ * よける向きへ少しずつ向きを変える
+ */
+function avoidObstacles(
+  key: number,
+  s: { pos: THREE.Vector3; heading: number },
+  radius: number,
+  dt: number,
+) {
+  let pushX = 0;
+  let pushZ = 0;
+  const collide = (x: number, z: number, r: number, share: number) => {
+    const dx = s.pos.x - x;
+    const dz = s.pos.z - z;
+    const min = radius + r;
+    const d2 = dx * dx + dz * dz;
+    if (d2 >= min * min) return;
+    const d = Math.sqrt(d2);
+    // 真上に重なっていたら、適当な向きへ押し出す
+    const nx = d > 1e-4 ? dx / d : Math.cos(key);
+    const nz = d > 1e-4 ? dz / d : Math.sin(key);
+    pushX += nx * (min - d) * share;
+    pushZ += nz * (min - d) * share;
+  };
+
+  for (const [other, body] of floorBodies) {
+    if (other === key || !body.object.visible) continue;
+    // 動く生き物どうしは半分ずつ押し合う。動かない生き物からは全部自分がよける
+    collide(body.object.position.x, body.object.position.z, body.radius, body.moves ? 0.5 : 1);
+  }
+  const depth = diveStore.get().depth;
+  for (const rock of ROCK_OBSTACLES) {
+    if (presenceAt(depth, rock.depth) <= 0) continue;
+    collide(rock.x, rock.z, rock.radius, 1);
+  }
+  if (pushX === 0 && pushZ === 0) return;
+
+  s.pos.x += pushX;
+  s.pos.z += pushZ;
+  // 押し出された向きへ向きを変えて、回り込むように進む
+  const desired = Math.atan2(-pushZ, pushX);
+  const diff = Math.atan2(Math.sin(desired - s.heading), Math.cos(desired - s.heading));
+  s.heading += diff * Math.min(1, dt * 2.5);
+}
 
 /** 泳ぎ回れる範囲 */
 const BOUNDS = { x: 14, zNear: -6, zFar: -30 };
@@ -338,6 +395,20 @@ function CreatureInstance({
   // 外されたときに「横切り中」のまま残らないようにする
   useEffect(() => () => cancelFlyby(flyby, seed), [seed]);
 
+  // 海底にいる生き物は、ほかの這う生き物がすり抜けないよう位置を知らせる
+  const onFloor = creature.behavior === "crawl" || creature.behavior === "sessile";
+  useEffect(() => {
+    if (!onFloor || !outer.current) return;
+    floorBodies.set(seed, {
+      object: outer.current,
+      radius: size * BODY_RADIUS,
+      moves: creature.behavior === "crawl",
+    });
+    return () => {
+      floorBodies.delete(seed);
+    };
+  }, [onFloor, seed, size, creature.behavior]);
+
   useFrame(({ clock }, rawDt) => {
     const g = outer.current;
     const s = simRef.current;
@@ -382,6 +453,7 @@ function CreatureInstance({
     const speed = creature.speed * size * s.speedJitter * r.speedMul;
     s.pos.x += Math.cos(s.heading) * speed * dt;
     s.pos.z -= Math.sin(s.heading) * speed * dt;
+    if (creature.behavior === "crawl") avoidObstacles(seed, s, size * BODY_RADIUS, dt);
 
     let y: number;
     let pitch = 0;
