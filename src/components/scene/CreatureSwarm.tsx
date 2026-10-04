@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, type ComponentType, type RefObject } from "
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import { CREATURES, displayLength, type Creature, type ModelKind } from "@/data/creatures";
-import { diveStore } from "@/lib/diveStore";
+import { diveStore, startOptions } from "@/lib/diveStore";
 import { VISIBLE_FADE, registerCreature, selectCreature } from "@/lib/focus";
 import { getSchools } from "@/lib/school/client";
 import { createRandom, floorY, hashString, useDepthFade } from "./utils";
@@ -44,8 +44,14 @@ export const MODELS: Record<ModelKind, ComponentType<ModelProps>> = {
 /**
  * 窓の前を横切る演出の管理。同時に横切るのは 1 匹だけにする。
  * nextAt はシーンの経過時間（秒）。
+ * opening: 到着した直後に、アノマロカリスが横切る演出をまだ始めていないか
  */
-const flybyDirector = { activeKey: null as number | null, nextAt: 6 };
+const flybyDirector = { activeKey: null as number | null, nextAt: 6, opening: true };
+
+/** 到着した直後に横切る生き物 */
+const OPENING_FLYBY_ID = "anomalocaris";
+/** 到着してから横切り始めるまでの時間 (秒)。窓の中の演出が消えきるのを待つ */
+const OPENING_DELAY = 0.6;
 
 /** 横切る経路。画面外の横から入って、窓のすぐ前をカーブして反対側へ抜ける */
 const FLYBY = { halfWidth: 11, z: -5.2, bulge: 2.6, y: -0.7 };
@@ -59,8 +65,8 @@ function flybyPoint(side: number, p: number, out: THREE.Vector3) {
 }
 
 type Flyby = {
-  /** exit: 画面の外へ出る / pass: 窓の前を横切る */
-  mode: "exit" | "pass";
+  /** wait: 画面の外で待つ（到着直後の演出用） / exit: 画面の外へ出る / pass: 窓の前を横切る */
+  mode: "wait" | "exit" | "pass";
   side: number;
   t: number;
   duration: number;
@@ -81,23 +87,43 @@ const tmpSphere = new THREE.Sphere();
 const BOUNDS = { x: 14, zNear: -6, zFar: -30 };
 const CENTER = new THREE.Vector3(0, 0, (BOUNDS.zNear + BOUNDS.zFar) / 2);
 
+/**
+ * 窓の近くの海底の位置 (x, z)。ランダムに置くと全部が遠くになることがあるので、
+ * 海底の生き物は種類ごとに 1 匹だけ、最初はここから歩き始める。
+ * 窓の下半分に見える範囲で、互いに重ならないよう散らしてある
+ */
+const FRONT_SLOTS: [number, number][] = [
+  [-3, -10],
+  [2.6, -9.6],
+  [-0.4, -12.6],
+  [4.2, -12.2],
+  [-4.6, -13.2],
+  [1, -10.8],
+  [-2, -15],
+  [3.4, -14.6],
+];
+
 export function CreatureSwarm() {
-  const instances = useMemo(
-    () =>
-      CREATURES.flatMap((c) =>
-        Array.from({ length: c.count }, (_, i) => ({
+  const instances = useMemo(() => {
+    let slot = 0;
+    return CREATURES.flatMap((c) =>
+      Array.from({ length: c.count }, (_, i) => {
+        const nearFront =
+          i === 0 && !c.school && (c.behavior === "crawl" || c.behavior === "nearFloor");
+        return {
           creature: c,
           index: i,
           seed: hashString(c.id) + i * 7919,
-        })),
-      ),
-    [],
-  );
+          front: nearFront ? FRONT_SLOTS[slot++ % FRONT_SLOTS.length] : undefined,
+        };
+      }),
+    );
+  }, []);
 
   return (
     <>
-      {instances.map(({ creature, index, seed }) => (
-        <CreatureInstance key={seed} creature={creature} index={index} seed={seed} />
+      {instances.map(({ creature, index, seed, front }) => (
+        <CreatureInstance key={seed} creature={creature} index={index} seed={seed} front={front} />
       ))}
     </>
   );
@@ -107,11 +133,14 @@ function CreatureInstance({
   creature,
   index,
   seed,
+  front,
 }: {
   creature: Creature;
   /** 同じ種類の中での番号。群れの計算結果を取り出すのに使う */
   index: number;
   seed: number;
+  /** 最初に置く窓の近くの位置 (x, z)。なければランダムに置く */
+  front?: [number, number];
 }) {
   const outer = useRef<THREE.Group>(null);
   const inner = useRef<THREE.Group>(null);
@@ -121,7 +150,7 @@ function CreatureInstance({
 
   const phase = useMemo(() => createRandom(seed + 1)() * Math.PI * 2, [seed]);
   const simRef = useRef<Sim | null>(null);
-  if (simRef.current === null) simRef.current = createSim(creature, seed, phase);
+  if (simRef.current === null) simRef.current = createSim(creature, seed, phase, front);
   const excite = useRef(0);
   /** 突っつかれてからの経過時間。反応していないときは null */
   const reactionTime = useRef<number | null>(null);
@@ -171,6 +200,25 @@ function CreatureInstance({
     const s = simRef.current;
     if (!g || !s) return false;
 
+    if (!flyby.current && flybyDirector.opening) {
+      // 到着直後の演出。URL で深さを指定されたときは、到着の描写がないのでやらない
+      if (startOptions.fromUrl) {
+        flybyDirector.opening = false;
+      } else if (creature.id === OPENING_FLYBY_ID && flybyDirector.activeKey === null) {
+        // 演出中は窓が隠れているので、その間に画面の外の出発点へ移しておく
+        flybyDirector.opening = false;
+        flybyDirector.activeKey = seed;
+        flyby.current = {
+          mode: "wait",
+          side: s.rand() < 0.5 ? 1 : -1,
+          t: 0,
+          duration: (FLYBY.halfWidth * 2) / (size * 0.8),
+        };
+        // 途中で取りやめになったときは、いつもの間隔で横切る
+        flybyDirector.nextAt = t + 20;
+      }
+    }
+
     if (!flyby.current) {
       const { focusKey, pokePhase } = diveStore.get();
       if (
@@ -193,6 +241,21 @@ function CreatureInstance({
 
     const fb = flyby.current;
     fb.t += dt;
+
+    if (fb.mode === "wait") {
+      flybyPoint(fb.side, 0, s.pos);
+      s.heading = fb.side > 0 ? Math.PI : 0;
+      s.turn = 0;
+      g.position.copy(s.pos);
+      g.rotation.set(0, s.heading, 0);
+      // 到着するまでは待ち時間を数えない
+      if (!diveStore.get().arrived) fb.t = 0;
+      if (fb.t >= OPENING_DELAY) {
+        fb.mode = "pass";
+        fb.t = 0;
+      }
+      return true;
+    }
 
     if (fb.mode === "exit") {
       // 横へ向きを変えて、少し速めに泳いで画面の外へ出る
@@ -443,10 +506,16 @@ type Sim = {
   rand: () => number;
 };
 
-function createSim(creature: Creature, seed: number, phase: number): Sim {
+function createSim(
+  creature: Creature,
+  seed: number,
+  phase: number,
+  front?: [number, number],
+): Sim {
   const rand = createRandom(seed);
-  const x = (rand() * 2 - 1) * BOUNDS.x;
-  const z = THREE.MathUtils.lerp(BOUNDS.zNear, BOUNDS.zFar, rand());
+  let x = (rand() * 2 - 1) * BOUNDS.x;
+  let z = THREE.MathUtils.lerp(BOUNDS.zNear, BOUNDS.zFar, rand());
+  if (front) [x, z] = front;
   let baseY: number;
   switch (creature.behavior) {
     case "swim":
