@@ -11,9 +11,10 @@ const DIVE_IN_ON_ARRIVAL = true;
 
 /** 演出のタイミング (秒) */
 const COUNT_START = 0.3;
-const COUNT_END = 2.0;
-const FADE_START = 2.4;
-const FADE_END = 3.2;
+const COUNT_END = 2.2;
+// 年数が止まってから少しの間、到着した年を見せてから海を映す
+const FADE_START = 2.8;
+const FADE_END = 3.6;
 
 /** 通り過ぎる時代の区切り（年前） */
 const ERAS: [number, string][] = [
@@ -76,8 +77,9 @@ export function TimeSlipIntro() {
       const t = (now - start) / 1000;
 
       const p = Math.min(1, Math.max(0, (t - COUNT_START) / (COUNT_END - COUNT_START)));
-      // 年数は加速しながら増える
-      const yearsAgo = TARGET_YEARS_AGO * p * p;
+      // 年数は加速しながら増え、カンブリア紀に近づくと減速して止まる
+      const eased = p < 0.5 ? 4 * p * p * p : 1 - (2 - 2 * p) ** 3 / 2;
+      const yearsAgo = TARGET_YEARS_AGO * eased;
       if (yearsRef.current) {
         yearsRef.current.textContent = p >= 1 ? "約5億800万年前" : formatYears(yearsAgo);
       }
