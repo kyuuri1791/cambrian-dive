@@ -8,6 +8,7 @@ import { lastPoke } from "@/lib/focus";
 import { encodeShareCard } from "@/lib/shareCard";
 import { drawObservationCard } from "@/lib/observationCard";
 import { photoCapture } from "@/components/scene/PhotoCapture";
+import { CAMERA_ICON_SVG } from "./cameraIcon";
 
 /** 突っついてからこの時間内に撮ると、カードにスタンプが押される (ms) */
 const POKE_STAMP_WINDOW = 6000;
@@ -115,9 +116,12 @@ export function PhotoBooth() {
         title="撮影する"
       >
         {/* 絵文字だと端末ごとに絵柄や位置が変わり、読み込み時に位置も動くので、
-            絵の範囲に合わせて中央を揃えた画像（Noto Color Emoji のカメラ）を使う */}
-        {/* eslint-disable-next-line @next/next/no-img-element -- 小さな固定のSVGなので最適化はいらない */}
-        <img src="/icons/camera.svg" alt="" width={64} height={64} className="h-[50%] w-[50%]" draggable={false} />
+            絵の範囲に合わせて中央を揃えたアイコンを HTML に直接埋め込む（中身は固定の文字列） */}
+        <span
+          className="block h-[50%] w-[50%] [&>svg]:h-full [&>svg]:w-full"
+          aria-hidden
+          dangerouslySetInnerHTML={{ __html: CAMERA_ICON_SVG }}
+        />
       </button>
 
       {card && <CardDialog card={card} onClose={() => setCard(null)} />}
